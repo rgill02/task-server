@@ -7,15 +7,16 @@ import threading
 import time
 import os
 import logging
+import json
 
 #Third party imports
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import FastAPI, HTTPException, Response, Body
 from fastapi import status as apistatus
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 #Our imports
-import Task_Database
+from Task_Database_2 import Task_Database
 
 ################################################################################
 ###                            Helper Functions                              ###
@@ -39,7 +40,7 @@ def task_runner(task_func, logfile, task_id, name, input_file, output_file, conf
 	
 	task_logger.info("Starting task '%s'" % name)
 
-	task_func(input_file, output_file, config, task_logger)
+	task_func(task_logger, input_file, output_file, **json.loads(config))
 
 ################################################################################
 ###                            Task Server Class                             ###
@@ -53,7 +54,7 @@ class Task_Server:
 	"""
 	############################################################################
 	def __init__(self, tasks={}, host="0.0.0.0", port="8001", 
-				 dbname="tasks.db", log_dir="logs", max_procs=4, 
+				 dbname="task_db.json", log_dir="logs", max_procs=4, 
 				 title="Task Server"):
 		"""
 		Parameters
@@ -86,7 +87,7 @@ class Task_Server:
 			os.makedirs(log_dir)
 
 		#Create db interface
-		self.task_db = Task_Database.Task_Database(dbname)
+		self.task_db = Task_Database(dbname)
 
 		#Keep track of processes and threads
 		self.procs = []
@@ -105,7 +106,7 @@ class Task_Server:
 		#Cleanup
 		if self.monitor_procs_thread:
 			self.monitor_procs_should_run.clear()
-			self.monitor_procs_should_run.join()
+			self.monitor_procs_thread.join()
 			self.monitor_procs_thread = None
 
 	############################################################################
@@ -153,7 +154,7 @@ class Task_Server:
 					self.task_db.update_finished_process(task_id, False, "Exitcode = %d" % proc.exitcode)
 					#Process ended so we need to update the database and mark 
 					#this one for removal
-					self.proc.join()
+					proc.join()
 					idxs_to_remove.append(ii)
 
 			#Remove all the finished procs
@@ -179,6 +180,10 @@ class Task_Server:
 		print("Running server on http://%s:%d" % (self.host, self.port))
 		uvicorn.run(self.app, host=self.host, port=self.port)
 
+		#Stop monitor thread
+		self.monitor_procs_should_run.clear()
+		self.monitor_procs_thread.join()
+
 	############################################################################
 	def _setup_routes(self):
 		"""
@@ -193,7 +198,8 @@ class Task_Server:
 		########################################################################
 		#Create task
 		@self.app.post("/add_task")
-		def start_job(name, input_file, output_file, config):
+		def start_job(name: str = Body(), input_file: str = Body(), 
+					  output_file: str = Body(), config: dict = Body()):
 			#Check if job exists
 			if name in self.tasks:
 				task_func = self.tasks[name]
@@ -204,7 +210,7 @@ class Task_Server:
 				)
 
 			#Add entry to database
-			self.task_db.create_new_task(name, input_file, output_file, config)
+			self.task_db.create_new_task(name, input_file, output_file, json.dumps(config))
 
 			#Tell user we successfully added the task
 			return Response(status_code=apistatus.HTTP_200_OK)

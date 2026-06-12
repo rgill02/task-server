@@ -3,7 +3,6 @@
 ################################################################################
 #Standard imports
 import sqlite3
-import json
 import argparse
 
 ################################################################################
@@ -74,7 +73,7 @@ class Task_Database:
 		output_file: str
 			Full path to output file
 		config : str
-			JSON serializeable dict representing config for the task
+			JSON serialized dict representing config for the task
 
 		Returns
 		-------
@@ -121,29 +120,41 @@ class Task_Database:
 		#Enforce WAL mode
 		cursor.execute("PRAGMA journal_mode=WAL;")
 
+		print("1")
+
 		#Get all waiting tasks
 		tasks = {}
 		query = "SELECT * FROM tasks WHERE status = 0"
 		cursor.execute(query)
 		tasks["waiting_tasks"] = cursor.fetchall()
 
+		print("2")
+
 		#Get all running tasks
 		query = "SELECT * FROM tasks WHERE status = 1"
 		cursor.execute(query)
 		tasks["running_tasks"] = cursor.fetchall()
+
+		print("3")
 
 		#Get all tasks that errored
 		query = "SELECT * FROM tasks WHERE status = 2"
 		cursor.execute(query)
 		tasks["errored_tasks"] = cursor.fetchall()
 
+		print("4")
+
 		#Get all tasks that finished succesfully
 		query = "SELECT * FROM tasks WHERE status = 3"
 		cursor.execute(query)
 		tasks["finished_tasks"] = cursor.fetchall()
 
+		print("5")
+
 		#Close database
 		conn.close()
+
+		print("6")
 
 		#Return tasks
 		return tasks
