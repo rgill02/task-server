@@ -51,6 +51,7 @@ def init_db(dbname=DB_NAME):
 		Path to sqlite3 database file to initialize
 	"""
 	with get_db_conn(dbname) as conn:
+		conn.execute("BEGIN IMMEDIATE")
 		cursor = conn.cursor()
 
 		#Create tasks table
@@ -176,7 +177,7 @@ def get_all_waiting_tasks(dbname=DB_NAME):
 		List of entries of waiting tasks
 	"""
 	#Create connection
-	with get_db_conn() as conn:
+	with get_db_conn(dbname) as conn:
 		cursor = conn.cursor()
 
 		#Get all waiting tasks
@@ -203,7 +204,7 @@ def get_all_running_tasks(dbname=DB_NAME):
 		List of entries of running tasks
 	"""
 	#Create connection
-	with get_db_conn() as conn:
+	with get_db_conn(dbname) as conn:
 		cursor = conn.cursor()
 
 		#Get all running tasks
@@ -230,7 +231,7 @@ def get_all_errored_tasks(dbname=DB_NAME):
 		List of entries of errored tasks
 	"""
 	#Create connection
-	with get_db_conn() as conn:
+	with get_db_conn(dbname) as conn:
 		cursor = conn.cursor()
 
 		#Get all errored tasks
@@ -257,7 +258,7 @@ def get_all_finished_tasks(dbname=DB_NAME):
 		List of entries of finished tasks
 	"""
 	#Create connection
-	with get_db_conn() as conn:
+	with get_db_conn(dbname) as conn:
 		cursor = conn.cursor()
 
 		#Get all finished tasks
@@ -285,7 +286,7 @@ def update_to_finished(task_id, success=True, output="", dbname=DB_NAME):
 	dbname : str
 		Path to database file
 	"""
-	with get_db_conn() as conn:
+	with get_db_conn(dbname) as conn:
 		conn.execute("BEGIN IMMEDIATE")
 		cursor = conn.cursor()
 
@@ -308,7 +309,7 @@ def update_to_running(task_id, dbname=DB_NAME):
 	dbname : str
 		Path to database file
 	"""
-	with get_db_conn() as conn:
+	with get_db_conn(dbname) as conn:
 		conn.execute("BEGIN IMMEDIATE")
 		cursor = conn.cursor()
 
@@ -333,7 +334,7 @@ def update_to_waiting(task_id, dbname=DB_NAME):
 	dbname : str
 		Path to database file
 	"""
-	with get_db_conn() as conn:
+	with get_db_conn(dbname) as conn:
 		conn.execute("BEGIN IMMEDIATE")
 		cursor = conn.cursor()
 

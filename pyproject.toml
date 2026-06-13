@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "task_server"
+version = "0.1.0"
+description = "Server with API to launch and monitor long running tasks, especially file processing jobs"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+	"fastapi>=0.136.3"
+]
+authors = [
+	{name = "Ryan Gill"}
+]
+
+[project.urls]
+Homepage = "https://github.com/rgill02/task-server"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
